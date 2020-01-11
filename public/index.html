@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Chat do Eduardo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    <link rel="stylesheet" href="style.css">    
+</head>
+    <body>
+        <form id="chat">
+            <input type="text" name="username" >
+            <div class="messages"></div>
+            <input type="text" name="message">
+            <button type="submit">Enviar</button>
+        </form>
+    </body>
+    <script type="text/javascript">
+        var socket = io('http://localhost:3000'); // qual página será feita a comunicação
+
+        function renderMessage(message) { // função que serve para exibir a mensagem formatada e isso que ela recebe é um array/objeto
+            $('.messages').append(`<div class = "message"><strong> ${message.author} : </strong> ${message.message}</div>`);
+        }
+
+        socket.on('previousMessages',function(messages) { // ele está ouvindo o socket, então se ele ouvir previousMessages, ele irá executar x função, nesse caso carregar as antigas mensagens, utilizando o array já pré definido, já que quando você carrega, carrega apenas a página
+            for(message of messages) {
+                renderMessage(message);
+            }
+        })
+
+        socket.on('receivedMessage', function(message) { // Aqui ele apenas está escuntado, recebe, renderiza e já exibe
+            renderMessage(message);
+        } )
+
+        $('#chat').submit(function(event) { // aqui é quando ele clica para enviar a mensagem
+            event.preventDefault();// server para não enviar o html do form, ai o JS não envia todo o form, apenas os dados
+
+            var author = $('input[name=username]').val(); // os dois pegando o name sem precisar id
+            var message = $('input[name=message]').val();
+
+            if(author.length && message.length) { // vê se tem alguma coisa escrita
+                var messageObject = { // cria o array
+                    author: author,
+                    message: message
+                };
+                renderMessage(messageObject);// renderiza a mensagem e já exibe
+                socket.emit('sendMessage',messageObject );// envia para o back-end esperando o socket.on ter o sendMessage
+            }
+        })
+    </script>
+</html>
